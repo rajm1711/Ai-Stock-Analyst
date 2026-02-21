@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-background text-slate-900 text-body antialiased;
+}
+
+.card {
+  @apply rounded-xl bg-surface shadow-soft p-6;
+}
+
+.section-gap {
+  @apply space-y-8;
+}
