@@ -1,66 +1,78 @@
 import OpenAI from "openai";
-import { FundamentalSnapshot, NewsItem, StockQuote, TechnicalIndicators } from "@/types/market";
 import { RESEARCH_DISCLAIMER } from "@/lib/constants";
+import { FundamentalSnapshot, NewsItem, StockQuote, TechnicalSummary } from "@/types/market";
+import { ResearchReport } from "@/types/research";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export interface ResearchPayload {
   symbol: string;
   quote: StockQuote;
-  technical: TechnicalIndicators;
-  fundamentals?: FundamentalSnapshot;
+  technicalSummary: TechnicalSummary;
+  fundamentals: FundamentalSnapshot;
   news: NewsItem[];
 }
 
-export interface InstitutionalReport {
-  executiveSummary: string;
-  marketOverview: string;
-  technicalAnalysis: string;
-  fundamentalAnalysis: string;
-  riskFactors: string;
-  scenarioOutlook: {
-    bull: string;
-    base: string;
-    bear: string;
-  };
-  confidenceLevel: string;
-  disclaimer: string;
-}
+const defaultReport = (symbol: string): ResearchReport => ({
+  executiveSummary: `${symbol} research report unavailable due to AI provider issue.`,
+  primaryTrend: "Unavailable",
+  shortTermStructure: "Unavailable",
+  keySupport: "Unavailable",
+  keyResistance: "Unavailable",
+  fundamentalSnapshot: "Unavailable",
+  newsCatalystSummary: "Unavailable",
+  riskScenario: "Model currently unavailable.",
+  bias: "Neutral",
+  confidenceLevel: "Low",
+  disclaimer: RESEARCH_DISCLAIMER
+});
 
-export async function generateInstitutionalResearch(payload: ResearchPayload): Promise<InstitutionalReport> {
+export async function generateResearchReport(payload: ResearchPayload): Promise<ResearchReport> {
   if (!process.env.OPENAI_API_KEY) {
-    return {
-      executiveSummary: `Live AI is unavailable for ${payload.symbol}.`,
-      marketOverview: "OpenAI key missing.",
-      technicalAnalysis: "Technical engine ran successfully; narrative generation unavailable.",
-      fundamentalAnalysis: "Fundamental narrative unavailable.",
-      riskFactors: "Provider/API downtime and macro event risk.",
-      scenarioOutlook: {
-        bull: "Bull case unavailable.",
-        base: "Base case unavailable.",
-        bear: "Bear case unavailable."
-      },
-      confidenceLevel: "Low",
-      disclaimer: RESEARCH_DISCLAIMER
-    };
+    return defaultReport(payload.symbol);
   }
 
-  const response = await client.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      {
-        role: "system",
-        content:
-          "You are an institutional sell-side strategist. Tone must be professional and objective (Goldman Sachs style). Never give direct buy/sell advice. Output valid JSON only."
-      },
-      {
-        role: "user",
-        content: `Create research report JSON with keys: executiveSummary, marketOverview, technicalAnalysis, fundamentalAnalysis, riskFactors, scenarioOutlook:{bull,base,bear}, confidenceLevel, disclaimer. Data: ${JSON.stringify(payload)}`
-      }
-    ]
-  });
+  try {
+    const response = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        {
+          role: "system",
+          content:
+            "You are a professional institutional analyst. Return strict JSON with: executiveSummary, primaryTrend, shortTermStructure, keySupport, keyResistance, fundamentalSnapshot, newsCatalystSummary, riskScenario, bias(Bullish|Bearish|Neutral), confidenceLevel, disclaimer."
+        },
+        {
+          role: "user",
+          content: `Build a professional report from this payload: ${JSON.stringify(payload)}`
+        }
+      ]
+    });
 
-  const text = response.output_text;
-  const parsed = JSON.parse(text) as InstitutionalReport;
-  return { ...parsed, disclaimer: RESEARCH_DISCLAIMER };
+    const parsed = JSON.parse(response.output_text) as ResearchReport;
+    return { ...parsed, disclaimer: RESEARCH_DISCLAIMER };
+  } catch (error) {
+    console.error("[researchEngine] OpenAI failure", error);
+    return defaultReport(payload.symbol);
+  }
 }
+
+
+export const generateInstitutionalResearch = async (payload: { symbol: string; quote: StockQuote; technical: any; fundamentals?: FundamentalSnapshot; news: NewsItem[]; }) => {
+  const report = await generateResearchReport({
+    symbol: payload.symbol,
+    quote: payload.quote,
+    technicalSummary: payload.technical,
+    fundamentals: payload.fundamentals ?? { symbol: payload.symbol },
+    news: payload.news
+  });
+  return {
+    executiveSummary: report.executiveSummary,
+    marketOverview: report.primaryTrend,
+    technicalAnalysis: report.shortTermStructure,
+    fundamentalAnalysis: report.fundamentalSnapshot,
+    riskFactors: report.riskScenario,
+    scenarioOutlook: { bull: report.primaryTrend, base: report.shortTermStructure, bear: report.riskScenario },
+    confidenceLevel: report.confidenceLevel,
+    disclaimer: report.disclaimer
+  };
+};
