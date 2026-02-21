@@ -15,6 +15,15 @@ export interface ForexQuote {
   timestamp: string;
 }
 
+export interface CandlePoint {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export interface FundamentalSnapshot {
   symbol: string;
   peRatio?: number;
@@ -47,4 +56,32 @@ export interface TechnicalIndicators {
   resistance: number;
   volatility: number;
   trend: "bullish" | "bearish" | "sideways";
+}
+
+export interface TechnicalSummary {
+  trend: "bullish" | "bearish" | "sideways";
+  shortTermStructure: "above_20sma" | "below_20sma";
+  sma: {
+    sma20: number;
+    sma50: number;
+    sma200: number;
+  };
+  rsi14: number;
+  macd: {
+    value: number;
+    signal: number;
+    histogram: number;
+  };
+  support: number;
+  resistance: number;
+}
+
+export type ScannerType = "breakout" | "pullback" | "high-volume" | "trend-continuation";
+
+export interface ScannerResult {
+  symbol: string;
+  score: number;
+  lastPrice: number;
+  trend: "bullish" | "bearish" | "sideways";
+  reason: string;
 }

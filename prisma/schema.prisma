@@ -25,14 +25,18 @@ model User {
 }
 
 model SavedReport {
-  id          String   @id @default(cuid())
-  userId      String
-  symbol      String
-  reportJson  Json
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String
+  symbol        String
+  generatedAt   DateTime @default(now())
+  bias          String   @default("Neutral")
+  confidence    String   @default("Low")
+  reportContent String
+  reportJson    Json
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, symbol, expiresAt])
 }
@@ -46,6 +50,18 @@ model Watchlist {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model SignalResult {
+  id          String   @id @default(cuid())
+  symbol      String
+  bias        String
+  entryPrice  Float
+  outcome     String
+  success     Boolean
+  createdAt   DateTime @default(now())
+
+  @@index([symbol, success])
 }
 
 model Subscription {
