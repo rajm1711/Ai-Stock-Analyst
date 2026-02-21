@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  ELITE
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  passwordHash   String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  subscription   Subscription?
+  researchReports ResearchReport[]
+  signals        Signal[]
+  scannerResults ScannerResult[]
+  apiUsageLogs   ApiUsageLog[]
+  watchlists     Watchlist[]
+}
+
+model Subscription {
+  id         String           @id @default(cuid())
+  userId     String           @unique
+  tier       SubscriptionTier @default(FREE)
+  status     String           @default("active")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ResearchReport {
+  id         String   @id @default(cuid())
+  userId     String
+  asset      String
+  assetClass String
+  outputJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Signal {
+  id         String   @id @default(cuid())
+  userId     String
+  symbol     String
+  bias       String
+  confidence Float
+  outputJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScannerResult {
+  id         String   @id @default(cuid())
+  userId     String
+  timeframe  String
+  outputJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ApiUsageLog {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String
+  tokensUsed Int      @default(0)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Watchlist {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  symbols    Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
