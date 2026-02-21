@@ -1,40 +1,38 @@
+"use client";
+
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const rows = [
-  { asset: "NVDA", bias: "Long Bias", confidence: "78%", metric: "Volume +168%, RSI 66" },
-  { asset: "EUR/USD", bias: "Neutral Bias", confidence: "61%", metric: "MA compression, RSI 50" },
-  { asset: "TSLA", bias: "Short Bias", confidence: "72%", metric: "Breakdown below 50DMA" }
-];
-
 export function ScannerPanel() {
+  const [timeframe, setTimeframe] = useState("1D");
+  const [confidenceThreshold, setConfidenceThreshold] = useState(70);
+  const [explanation, setExplanation] = useState("");
+
+  async function runScan() {
+    const response = await fetch("/api/scanner", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timeframe, confidenceThreshold, signals: [] })
+    });
+    const data = await response.json();
+    setExplanation(data.explanation ?? data.error ?? "No response");
+  }
+
   return (
     <div className="section-gap">
       <Card title="Scanner Filters" subtitle="Configure timeframe and confidence thresholds">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <select className="rounded-xl border border-slate-300 px-3 py-2">
-            <option>1H</option>
-            <option>4H</option>
-            <option>1D</option>
+          <select className="rounded-xl border border-slate-300 px-3 py-2" value={timeframe} onChange={(e) => setTimeframe(e.target.value)}>
+            <option>1H</option><option>4H</option><option>1D</option>
           </select>
-          <input type="range" min={50} max={95} defaultValue={70} className="w-full" />
-          <Button>Run Quantitative Scan</Button>
+          <input type="range" min={50} max={95} value={confidenceThreshold} onChange={(e) => setConfidenceThreshold(Number(e.target.value))} className="w-full" />
+          <Button onClick={runScan}>Run Quantitative Scan</Button>
         </div>
       </Card>
 
       <Card title="Structured Scan Results">
-        <div className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.asset} className="rounded-xl border border-slate-200 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-primary">{row.asset}</p>
-                <p className="text-body text-neutral">{row.bias}</p>
-              </div>
-              <p className="text-body text-slate-700">Confidence: {row.confidence}</p>
-              <p className="text-body text-slate-700">Supporting metrics: {row.metric}</p>
-            </div>
-          ))}
-        </div>
+        <p className="whitespace-pre-wrap text-body text-slate-700">{explanation || "Run scan to generate AI explanation from live inputs."}</p>
       </Card>
     </div>
   );
