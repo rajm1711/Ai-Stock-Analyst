@@ -1,18 +1,24 @@
+"use client";
+
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { ChartShell } from "@/components/charts/chart-shell";
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export function AnalyticsBoard() {
+  const { data } = useSWR("/api/macro", fetcher, { refreshInterval: 300_000 });
   return (
     <div className="section-gap">
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <Card title="Signal Win Rate"><p className="text-2xl font-semibold">63.4%</p></Card>
-        <Card title="Bias Accuracy"><p className="text-2xl font-semibold">67.8%</p></Card>
-        <Card title="Average Return Simulation"><p className="text-2xl font-semibold">1.9R</p></Card>
-        <Card title="Best-Performing Strategy"><p className="text-2xl font-semibold">Macro + Trend Composite</p></Card>
+        <Card title="Live Macro Intelligence"><p className="text-body">{data?.summary ? "Active" : "Loading"}</p></Card>
+        <Card title="Signal Coverage"><p className="text-2xl font-semibold">Dynamic</p></Card>
+        <Card title="Regime"><p className="text-2xl font-semibold">AI-derived</p></Card>
+        <Card title="Update Cadence"><p className="text-2xl font-semibold">5m</p></Card>
       </section>
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <ChartShell title="Timeframe Performance Comparison" description="1H vs 4H vs 1D outcome profiles" />
-        <ChartShell title="Strategy Performance Regimes" description="Performance by volatility and macro condition" />
+        <ChartShell title="Timeframe Performance Comparison" description="Live market + AI context" />
+        <Card title="Macro Summary"><p className="whitespace-pre-wrap text-body text-slate-700">{data?.summary ?? "Loading macro summary..."}</p></Card>
       </section>
     </div>
   );

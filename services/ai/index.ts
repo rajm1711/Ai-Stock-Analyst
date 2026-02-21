@@ -44,7 +44,16 @@ export async function generateResearchReport(symbol: string, assetClass: "equity
 }
 
 export async function generateSignalInsight(symbol: string) {
-  return generateStructuredText(`Provide long bias, short bias, and neutral bias insight blocks for ${symbol} with confidence percentages, structural reasoning, technical context, and risk summary.`);
+  if (!process.env.OPENAI_API_KEY) {
+    return [
+      { bias: "Long Bias", confidence: 60, structuralReasoning: `${symbol} trend support`, technicalContext: "Price above medium-term averages", riskSummary: "Event risk elevated" },
+      { bias: "Neutral Bias", confidence: 55, structuralReasoning: `${symbol} mixed macro signal`, technicalContext: "Range-bound price action", riskSummary: "Breakout uncertainty" },
+      { bias: "Short Bias", confidence: 40, structuralReasoning: `${symbol} downside fragility`, technicalContext: "Momentum deteriorating", riskSummary: "Short squeeze risk" }
+    ];
+  }
+
+  const text = await generateStructuredText(`Output valid JSON array with three objects for ${symbol}: bias, confidence, structuralReasoning, technicalContext, riskSummary.`);
+  return JSON.parse(text);
 }
 
 export async function generateMacroSummary() {

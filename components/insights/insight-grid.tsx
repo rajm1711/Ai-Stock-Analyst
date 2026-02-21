@@ -1,40 +1,22 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+"use client";
 
-const insights = [
-  {
-    bias: "Long Bias",
-    confidence: 74,
-    structuralReasoning: "Relative trend strength with improving breadth and stable volatility regime.",
-    technicalContext: "Price above 20/50-day averages with constructive pullback profile.",
-    riskSummary: "Macro catalyst concentration over upcoming inflation data releases."
-  },
-  {
-    bias: "Short Bias",
-    confidence: 68,
-    structuralReasoning: "Deteriorating breadth with negative momentum divergence and weakening sector leadership.",
-    technicalContext: "Failed retest under key moving averages and declining relative volume quality.",
-    riskSummary: "Unexpected policy commentary can trigger sharp bear-covering moves."
-  },
-  {
-    bias: "Neutral Bias",
-    confidence: 59,
-    structuralReasoning: "Balanced positioning, no clear directional edge in cross-asset confirmation.",
-    technicalContext: "Range-bound structure with mixed trend signals across timeframes.",
-    riskSummary: "Breakout probability rises into event-driven volatility windows."
-  }
-];
+import useSWR from "swr";
+import { Card } from "@/components/ui/card";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function InsightGrid() {
+  const { data } = useSWR("/api/insights?symbol=AAPL", fetcher, { refreshInterval: 300_000 });
+  const insights = data?.insights ?? [];
+
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-      {insights.map((insight) => (
+      {insights.map((insight: { bias: string; confidence: number; structuralReasoning: string; technicalContext: string; riskSummary: string }) => (
         <Card key={insight.bias} title={insight.bias}>
           <p className="mb-2 text-body">Confidence: {insight.confidence}%</p>
           <p className="mb-2 text-body text-slate-700">{insight.structuralReasoning}</p>
           <p className="mb-2 text-body text-slate-700">{insight.technicalContext}</p>
           <p className="mb-4 text-body text-neutral">{insight.riskSummary}</p>
-          <Button className="w-full">View Analysis</Button>
         </Card>
       ))}
     </div>
