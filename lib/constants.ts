@@ -1,10 +1,8 @@
 export const NAV_ITEMS = [
-  { href: "/overview", label: "Overview" },
-  { href: "/research", label: "Research" },
+  { href: "/", label: "Dashboard" },
+  { href: "/research/SPY", label: "Research" },
   { href: "/scanner", label: "Scanner" },
-  { href: "/insights", label: "Insights" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/settings", label: "Settings" }
+  { href: "/news/SPY", label: "News" }
 ];
 
 export const RESEARCH_DISCLAIMER =

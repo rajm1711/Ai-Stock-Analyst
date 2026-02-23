@@ -1,10 +1,5 @@
-import { ScannerPanel } from "@/components/scanner/scanner-panel";
+import { ScannerView } from "@/components/scanner/scanner-view";
 
 export default function ScannerPage() {
-  return (
-    <div className="section-gap">
-      <h1 className="text-page text-primary">Quantitative Scanner</h1>
-      <ScannerPanel />
-    </div>
-  );
+  return <ScannerView />;
 }
